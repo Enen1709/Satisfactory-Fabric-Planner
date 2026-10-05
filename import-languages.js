@@ -1,0 +1,12 @@
+const fs=require('fs'),path=require('path');
+const gamePath=process.argv[2]||(fs.existsSync(path.join(__dirname,'game.json'))?path.join(__dirname,'game.json'):path.join(__dirname,'app','game.json'));
+const game=JSON.parse(fs.readFileSync(gamePath,'utf8'));
+const docs=path.dirname(game.Source);
+const de=Object.fromEntries([...Object.values(game.Items),...Object.values(game.Buildings),...game.Recipes].map(x=>[x.Id,x.Name]));
+const groups=JSON.parse(fs.readFileSync(path.join(docs,'en-US.json'),'utf16le').replace(/^\uFEFF/,''));
+const english=Object.fromEntries(groups.flatMap(g=>g.Classes).map(c=>[c.ClassName,c.mDisplayName]));
+const en={};
+for(const [id,name] of Object.entries(de))en[id]=english[id]||name;
+for(const recipe of game.Recipes)if(!english[recipe.Id])en[recipe.Id]=(recipe.Alternate?'Alternate: ':'')+en[recipe.Outputs[0].Item];
+fs.writeFileSync(process.argv[3]||path.join(path.dirname(gamePath),'languages.json'),JSON.stringify({de,en},null,2));
+console.log(`Imported official game names: ${Object.keys(en).length} per language.`);

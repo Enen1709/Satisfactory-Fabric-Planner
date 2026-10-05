@@ -1,0 +1,10 @@
+namespace SatisfactoryPlanner;
+// Two-phase simplex: maximize c*x subject to A*x <= b, x >= 0.
+internal sealed class LinearProgram {
+ const double Eps=1e-8;readonly int m,n;readonly int[] basic,nonbasic;readonly double[,] d;
+ public LinearProgram(double[,] a,double[] b,double[] c){m=b.Length;n=c.Length;basic=new int[m];nonbasic=new int[n+1];d=new double[m+2,n+2];for(int i=0;i<m;i++){for(int j=0;j<n;j++)d[i,j]=a[i,j];basic[i]=n+i;d[i,n]=-1;d[i,n+1]=b[i];}for(int j=0;j<n;j++){nonbasic[j]=j;d[m,j]=-c[j];}nonbasic[n]=-1;d[m+1,n]=1;}
+ void Pivot(int r,int s){double inv=1/d[r,s];for(int i=0;i<m+2;i++)if(i!=r)for(int j=0;j<n+2;j++)if(j!=s)d[i,j]-=d[r,j]*d[i,s]*inv;for(int j=0;j<n+2;j++)if(j!=s)d[r,j]*=inv;for(int i=0;i<m+2;i++)if(i!=r)d[i,s]*=-inv;d[r,s]=inv;(basic[r],nonbasic[s])=(nonbasic[s],basic[r]);}
+ bool Simplex(int phase){int row=phase==1?m+1:m;for(int iteration=0;iteration<100000;iteration++){int s=-1;for(int j=0;j<=n;j++){if(phase==2&&nonbasic[j]==-1)continue;if(s==-1||d[row,j]<d[row,s]-Eps||(Math.Abs(d[row,j]-d[row,s])<Eps&&nonbasic[j]<nonbasic[s]))s=j;}if(s==-1||d[row,s]>=-Eps)return true;int r=-1;for(int i=0;i<m;i++){if(d[i,s]<=Eps)continue;if(r==-1||d[i,n+1]/d[i,s]<d[r,n+1]/d[r,s]-Eps||(Math.Abs(d[i,n+1]/d[i,s]-d[r,n+1]/d[r,s])<Eps&&basic[i]<basic[r]))r=i;}if(r==-1)return false;Pivot(r,s);}throw new InvalidOperationException("Rezeptkombination konvergiert nicht.");}
+ public double[] Solve(){int r=0;for(int i=1;i<m;i++)if(d[i,n+1]<d[r,n+1])r=i;if(m>0&&d[r,n+1]<-Eps){Pivot(r,n);if(!Simplex(1)||d[m+1,n+1]<-Eps||Math.Abs(d[m+1,n+1])>Eps)throw new InvalidOperationException("Diese Rezeptkombination kann das Ziel nicht produzieren. Bitte ein anderes Rezept wählen.");for(int i=0;i<m;i++)if(basic[i]==-1){int s=0;for(int j=1;j<=n;j++)if(d[i,j]<d[i,s]-Eps||(Math.Abs(d[i,j]-d[i,s])<Eps&&nonbasic[j]<nonbasic[s]))s=j;if(Math.Abs(d[i,s])>Eps)Pivot(i,s);}}
+ if(!Simplex(2))throw new InvalidOperationException("Unbegrenzte Rezeptkombination.");var x=new double[n];for(int i=0;i<m;i++)if(basic[i]>=0&&basic[i]<n)x[basic[i]]=Math.Max(0,d[i,n+1]);return x;}
+}

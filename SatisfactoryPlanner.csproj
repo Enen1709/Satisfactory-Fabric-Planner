@@ -1,0 +1,10 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType><TargetFramework>net10.0-windows</TargetFramework>
+    <UseWindowsForms>true</UseWindowsForms><ImplicitUsings>enable</ImplicitUsings><Nullable>enable</Nullable>
+    <AssemblyName>SatisfactoryPlaner</AssemblyName><SelfContained>false</SelfContained>
+    <DebugType>none</DebugType>
+    <ApplicationIcon>AppIcon.ico</ApplicationIcon>
+  </PropertyGroup>
+  <ItemGroup><EmbeddedResource Include="game.json" /><EmbeddedResource Include="languages.json" /><EmbeddedResource Include="UiStrings.json" /><EmbeddedResource Include="AppIcon.ico" /></ItemGroup>
+</Project>
